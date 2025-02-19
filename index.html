@@ -4,73 +4,187 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mapa Interactivo en Bogotá</title>
-  
+
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Leaflet Control Geocoder CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-  <!-- Leaflet Control Geocoder JS -->
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
+  <!-- Leaflet Control Geocoder -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  
   <style>
     body {
       font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
       margin: 0;
       padding: 0;
-      background-color: #f4f4f4;
-    }
-    
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 20px;
+      box-sizing: border-box;
     }
 
     #map {
-      height: 500px;
+      height: 600px;
       width: 100%;
-      border: 2px solid #ccc;
-      border-radius: 10px;
+    }
+
+    .container {
+      padding: 20px;
+      background-color: #ffffff;
+      margin: 20px;
+      border-radius: 8px;
       box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .container h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .marker-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .marker-options label {
+      font-size: 16px;
+    }
+
+    .marker-options select {
+      padding: 5px;
+      font-size: 16px;
+    }
+
+    .note-input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .button {
+      padding: 10px 20px;
+      background-color: #ff66cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background-color: #ff3385;
+    }
+
+    .heart-icon {
+      width: 24px;
+      height: 24px;
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Mapa Interactivo en Bogotá</h1>
-    <div id="map"></div>
+    <h2>Mapa Interactivo en Bogotá</h2>
+    <p>Haz clic en el mapa para agregar marcadores con notas y personaliza los colores.</p>
+
+    <!-- Selección de color para el marcador -->
+    <div class="marker-options">
+      <label for="marker-color">Elige el color del marcador:</label>
+      <select id="marker-color">
+        <option value="red">Rojo</option>
+        <option value="blue">Azul</option>
+        <option value="green">Verde</option>
+        <option value="purple">Morado</option>
+      </select>
+    </div>
+
+    <!-- Campos para agregar nota -->
+    <textarea id="note-title" class="note-input" placeholder="Título de la nota..."></textarea>
+    <textarea id="note-content" class="note-input" placeholder="Contenido de la nota..."></textarea>
+
+    <!-- Botón para agregar marcador -->
+    <button id="add-marker-btn" class="button">Agregar Marcador</button>
   </div>
+
+  <!-- Mapa -->
+  <div id="map"></div>
 
   <script>
     // Crear el mapa centrado en Bogotá
     var map = L.map('map').setView([4.7110, -74.0721], 12); // Bogotá, Colombia
 
-    // Cargar la capa base de OpenStreetMap con un estilo de colores diferentes (puedes cambiar la capa de Mapbox si lo deseas)
+    // Cargar la capa base de OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
     // Limitar el área de búsqueda solo a Bogotá
     var bounds = [[4.478, -74.340], [4.866, -73.906]]; // Definir el área de Bogotá
-    map.setMaxBounds(bounds);  // Limitar la vista del mapa a Bogotá
+    map.setMaxBounds(bounds);
 
-    // Configurar el geocodificador para que solo busque dentro de Bogotá
+    // Función para agregar un marcador con color y nota
+    function addMarker(lat, lng) {
+      // Obtener el color seleccionado
+      var color = document.getElementById("marker-color").value;
+      var noteTitle = document.getElementById("note-title").value;
+      var noteContent = document.getElementById("note-content").value;
+
+      // Verificar si hay título y contenido en las notas
+      if (!noteTitle || !noteContent) {
+        alert("¡Por favor ingresa un título y contenido para la nota!");
+        return;
+      }
+
+      // Crear el marcador con el color seleccionado
+      var markerIcon = L.icon({
+        iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Heart_icon_%28colored%29.svg',  // Ícono de corazón
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        shadowSize: [0, 0]
+      });
+
+      var marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
+      marker.bindPopup("<b>" + noteTitle + "</b><br>" + noteContent + "<br><button onclick='deleteMarker(" + lat + "," + lng + ")'>Eliminar Marcador</button>");
+      
+      // Limpiar los campos de texto
+      document.getElementById("note-title").value = "";
+      document.getElementById("note-content").value = "";
+    }
+
+    // Función para eliminar un marcador
+    function deleteMarker(lat, lng) {
+      // Filtrar los marcadores guardados para eliminar el que se ha seleccionado
+      var markers = map._layers;
+      for (var id in markers) {
+        if (markers[id]._latlng && markers[id]._latlng.lat === lat && markers[id]._latlng.lng === lng) {
+          map.removeLayer(markers[id]);
+        }
+      }
+    }
+
+    // Manejar clic en el mapa para agregar marcador
+    map.on('click', function(e) {
+      var lat = e.latlng.lat;
+      var lng = e.latlng.lng;
+      addMarker(lat, lng);
+    });
+
+    // Manejar clic en el botón para agregar marcador
+    document.getElementById("add-marker-btn").addEventListener("click", function() {
+      var lat = map.getCenter().lat;
+      var lng = map.getCenter().lng;
+      addMarker(lat, lng);
+    });
+
+    // Configuración del geocodificador con restricción a Bogotá
     var geocoder = L.Control.geocoder({
       geocoder: L.Control.Geocoder.nominatim(),
-      placeholder: 'Buscar dirección en Bogotá...',
+      placeholder: 'Buscar en Bogotá...',
       queryParams: {
-        countrycodes: 'CO', // Limitar a Colombia
+        countrycodes: 'CO', // Limitar la búsqueda a Colombia
         limit: 5 // Limitar el número de resultados
       },
       onResult: function(e) {
@@ -85,24 +199,6 @@
         }
       }
     }).addTo(map);
-
-    // Función para agregar marcadores con colores personalizados
-    map.on('click', function(e) {
-      var lat = e.latlng.lat;
-      var lng = e.latlng.lng;
-
-      var color = "#FF5733"; // Elegir un color (rojo anaranjado)
-
-      var marker = L.marker([lat, lng], {
-        icon: L.divIcon({
-          className: 'leaflet-div-icon',
-          html: '<div style="background-color: ' + color + '; width: 25px; height: 25px; border-radius: 50%;"></div>'
-        })
-      }).addTo(map);
-
-      marker.bindPopup("Marcador en: " + lat.toFixed(4) + ", " + lng.toFixed(4));
-    });
   </script>
-
 </body>
 </html>
