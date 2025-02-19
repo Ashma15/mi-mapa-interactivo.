@@ -55,9 +55,10 @@
     // Crear el mapa centrado en Bogotá
     var map = L.map('map').setView([4.7110, -74.0721], 12); // Bogotá, Colombia
 
-    // Cargar la capa base de OpenStreetMap
+    // Cargar la capa base de OpenStreetMap con un estilo de colores diferentes (puedes cambiar la capa de Mapbox si lo deseas)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
     }).addTo(map);
 
     // Limitar el área de búsqueda solo a Bogotá
@@ -85,16 +86,23 @@
       }
     }).addTo(map);
 
-    // Función para agregar marcadores (puedes personalizarla si lo deseas)
+    // Función para agregar marcadores con colores personalizados
     map.on('click', function(e) {
       var lat = e.latlng.lat;
       var lng = e.latlng.lng;
 
-      var marker = L.marker([lat, lng]).addTo(map);
+      var color = "#FF5733"; // Elegir un color (rojo anaranjado)
+
+      var marker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: 'leaflet-div-icon',
+          html: '<div style="background-color: ' + color + '; width: 25px; height: 25px; border-radius: 50%;"></div>'
+        })
+      }).addTo(map);
+
       marker.bindPopup("Marcador en: " + lat.toFixed(4) + ", " + lng.toFixed(4));
     });
   </script>
 
 </body>
-</html>	
-         
+</html>
