@@ -1,135 +1,207 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapa Interactivo con Filtros y Funcionalidades</title>
+  <title>Mapa Interactivo en Bogotá con Marcadores</title>
 
-  <!-- Incluir los estilos de Leaflet -->
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <!-- Incluir los estilos de Leaflet Routing Machine -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <!-- Leaflet Control Geocoder CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
     #map {
-      height: 500px;
+      height: 80vh;
       width: 100%;
     }
-    .sidebar {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background-color: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+    .container {
+      padding: 20px;
     }
-    .filter-button {
-      padding: 10px;
-      background-color: #ff4b5c;
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+    }
+
+    .controls {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 5px;
+      background-color: #007BFF;
       color: white;
       border: none;
       border-radius: 5px;
-      cursor: pointer;
     }
-    .filter-button:hover {
-      background-color: #e04354;
+
+    button:hover {
+      background-color: #0056b3;
     }
-    .weather-info {
-      margin-top: 20px;
+
+    /* Márgenes con corazones */
+    .heart-border {
+      border: 5px solid #ff3366;
+      padding: 20px;
+      border-radius: 15px;
+      margin: 20px;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Heart_icon_%28colored%29.svg/32px-Heart_icon_%28colored%29.svg.png') no-repeat center center;
+      background-size: 30px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
+
 <body>
-
-<div class="sidebar">
-  <h3>Mapa Interactivo</h3>
-  <button class="filter-button" onclick="filterPlaces()">Filtrar Restaurantes</button>
-  <div class="weather-info">
-    <h4>Clima Actual</h4>
-    <p id="weather">Cargando...</p>
-  </div>
-</div>
-
-<div id="map"></div>
-
-<!-- Incluir los scripts de Leaflet y Leaflet Routing Machine -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<script>
-  // Inicializar el mapa
-  var map = L.map('map').setView([40.730610, -73.935242], 13); // Coordenadas de Nueva York como ejemplo
-
-  // Cargar el mapa base (OpenStreetMap)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-
-  // Función para agregar marcadores (puntos de interés)
-  var places = [
-    { lat: 40.730610, lon: -73.935242, name: 'Restaurante A', type: 'restaurante' },
-    { lat: 40.741610, lon: -73.935242, name: 'Museo B', type: 'museo' },
-    { lat: 40.720610, lon: -73.925242, name: 'Restaurante C', type: 'restaurante' },
-    { lat: 40.710610, lon: -73.915242, name: 'Parque D', type: 'parque' }
-  ];
-
-  var markers = [];
-  
-  function addPlaceMarkers(places) {
-    places.forEach(function(place) {
-      var marker = L.marker([place.lat, place.lon]).addTo(map)
-        .bindPopup('<b>' + place.name + '</b><br>Tipo: ' + place.type);
-      markers.push(marker);
-    });
-  }
-
-  // Filtrar lugares según el tipo (restaurantes)
-  function filterPlaces() {
-    var filteredPlaces = places.filter(function(place) {
-      return place.type === 'restaurante';
-    });
-    // Limpiar los marcadores previos
-    markers.forEach(function(marker) {
-      map.removeLayer(marker);
-    });
-    markers = [];
-    // Agregar los marcadores filtrados
-    addPlaceMarkers(filteredPlaces);
-  }
-
-  // Función para agregar rutas (navegación entre dos puntos)
-  var control = L.Routing.control({
-    waypoints: [
-      L.latLng(40.730610, -73.935242), // Punto de inicio
-      L.latLng(40.741610, -73.935242)  // Punto de destino
-    ],
-    routeWhileDragging: true
-  }).addTo(map);
-
-  // Obtener y mostrar el clima actual (requiere una API KEY de OpenWeatherMap)
-  function getWeather() {
-    var apiKey = 'tu_api_key';  // Sustituye con tu clave de API de OpenWeatherMap
-    var weatherUrl = 'https://api.openweathermap.org/data/2.5/weather?lat=40.730610&lon=-73.935242&appid=' + apiKey + '&units=metric&lang=es';
+  <div class="container">
+    <div class="header">
+      <h1>Mapa Interactivo de Bogotá</h1>
+      <p>Haz clic en el mapa para agregar un marcador y personalizarlo.</p>
+    </div>
     
-    $.getJSON(weatherUrl, function(data) {
-      var weatherDescription = data.weather[0].description;
-      var temperature = data.main.temp;
-      var weatherText = 'Clima: ' + weatherDescription + '<br>Temperatura: ' + temperature + '°C';
-      $('#weather').html(weatherText);
-    }).fail(function() {
-      $('#weather').html('No se pudo obtener el clima.');
+    <!-- Contenedor con márgenes con corazones -->
+    <div class="heart-border">
+      <div id="map"></div>
+    </div>
+    
+    <div class="controls">
+      <button onclick="clearMarkers()">Eliminar Todos los Marcadores</button>
+    </div>
+    
+    <div class="footer">
+      <p>Mapa interactivo desarrollado por ti. ¡Disfrútalo!</p>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet Control Geocoder JS -->
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+  <script>
+    var map = L.map('map').setView([4.7110, -74.0721], 12); // Bogotá, Colombia
+
+    // Cargar capa de mapa
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Limitar la vista del mapa a Bogotá
+    var bounds = [[4.478, -74.340], [4.866, -73.906]]; // Área de Bogotá
+    map.setMaxBounds(bounds);
+
+    // Agregar control de búsqueda solo para Bogotá
+    var geocoder = L.Control.geocoder({
+      geocoder: L.Control.Geocoder.nominatim(),
+      placeholder: 'Buscar en Bogotá...',
+      queryParams: {
+        countrycodes: 'CO',
+        limit: 5
+      },
+      onResult: function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        if (map.getBounds().contains([lat, lng])) {
+          map.setView([lat, lng], 14);
+        } else {
+          alert("La ubicación no está dentro de los límites de Bogotá.");
+        }
+      }
+    }).addTo(map);
+
+    // Función para agregar un marcador
+    map.on('click', function(e) {
+      var lat = e.latlng.lat;
+      var lng = e.latlng.lng;
+
+      // Preguntar por el título y contenido de la nota
+      var noteTitle = prompt("Título de la nota:");
+      var noteContent = prompt("Contenido de la nota:");
+
+      if (noteTitle && noteContent) {
+        var marker = L.marker([lat, lng], {
+          icon: L.icon({
+            iconUrl: `https://www.iconsdb.com/icons/colored/blue/heart.png`, // Marcador de corazón azul
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32],
+            shadowSize: [0, 0]
+          })
+        }).addTo(map);
+        
+        marker.bindPopup(`
+          <b>${noteTitle}</b><br>
+          ${noteContent}<br>
+          <button onclick='deleteMarker(${lat}, ${lng})'>Eliminar Marcador</button>
+        `);
+        
+        saveMarker(lat, lng, noteTitle, noteContent);
+      } else {
+        alert("Por favor ingresa un título y contenido.");
+      }
     });
-  }
 
-  // Cargar el clima al cargar la página
-  getWeather();
+    // Guardar el marcador en el localStorage
+    function saveMarker(lat, lng, title, content) {
+      var markers = JSON.parse(localStorage.getItem('markers')) || [];
+      markers.push({ lat, lng, title, content });
+      localStorage.setItem('markers', JSON.stringify(markers));
+    }
 
-  // Agregar todos los lugares al mapa
-  addPlaceMarkers(places);
-</script>
+    // Eliminar un marcador
+    function deleteMarker(lat, lng) {
+      var markers = JSON.parse(localStorage.getItem('markers')) || [];
+      markers = markers.filter(marker => marker.lat !== lat || marker.lng !== lng);
+      localStorage.setItem('markers', JSON.stringify(markers));
+      location.reload();
+    }
+
+    // Eliminar todos los marcadores
+    function clearMarkers() {
+      localStorage.removeItem('markers');
+      location.reload();
+    }
+
+    // Cargar los marcadores guardados
+    window.onload = function() {
+      var savedMarkers = JSON.parse(localStorage.getItem('markers')) || [];
+      savedMarkers.forEach(function(markerData) {
+        var marker = L.marker([markerData.lat, markerData.lng], {
+          icon: L.icon({
+            iconUrl: `https://www.iconsdb.com/icons/colored/blue/heart.png`, // Marcador azul
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32],
+            shadowSize: [0, 0]
+          })
+        }).addTo(map);
+        marker.bindPopup(`
+          <b>${markerData.title}</b><br>
+          ${markerData.content}<br>
+          <button onclick='deleteMarker(${markerData.lat}, ${markerData.lng})'>Eliminar Marcador</button>
+        `);
+      });
+    };
+  </script>
 
 </body>
 </html>
