@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa Interactivo en Bogotá</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet Control Geocoder CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <!-- Leaflet Control Geocoder JS -->
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    #map {
+      height: 500px;
+      width: 100%;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Mapa Interactivo en Bogotá</h1>
+    <div id="map"></div>
+  </div>
+
+  <script>
+    // Crear el mapa centrado en Bogotá
+    var map = L.map('map').setView([4.7110, -74.0721], 12); // Bogotá, Colombia
+
+    // Cargar la capa base de OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Limitar el área de búsqueda solo a Bogotá
+    var bounds = [[4.478, -74.340], [4.866, -73.906]]; // Definir el área de Bogotá
+    map.setMaxBounds(bounds);  // Limitar la vista del mapa a Bogotá
+
+    // Configurar el geocodificador para que solo busque dentro de Bogotá
+    var geocoder = L.Control.geocoder({
+      geocoder: L.Control.Geocoder.nominatim(),
+      placeholder: 'Buscar dirección en Bogotá...',
+      queryParams: {
+        countrycodes: 'CO', // Limitar a Colombia
+        limit: 5 // Limitar el número de resultados
+      },
+      onResult: function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+
+        // Verificar si la ubicación está dentro de los límites de Bogotá
+        if (map.getBounds().contains([lat, lng])) {
+          map.setView([lat, lng], 14);  // Centrar el mapa en la ubicación encontrada
+        } else {
+          alert("La ubicación no está dentro de los límites de Bogotá.");
+        }
+      }
+    }).addTo(map);
+
+    // Función para agregar marcadores (puedes personalizarla si lo deseas)
+    map.on('click', function(e) {
+      var lat = e.latlng.lat;
+      var lng = e.latlng.lng;
+
+      var marker = L.marker([lat, lng]).addTo(map);
+      marker.bindPopup("Marcador en: " + lat.toFixed(4) + ", " + lng.toFixed(4));
+    });
+  </script>
+
+</body>
+</html>	
+         
