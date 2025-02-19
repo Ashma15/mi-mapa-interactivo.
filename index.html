@@ -1,204 +1,135 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapa Interactivo en Bogotá</title>
+  <title>Mapa Interactivo con Filtros y Funcionalidades</title>
 
-  <!-- Leaflet CSS -->
+  <!-- Incluir los estilos de Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-  <!-- Leaflet Control Geocoder -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <!-- Incluir los estilos de Leaflet Routing Machine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     #map {
-      height: 600px;
+      height: 500px;
       width: 100%;
     }
-
-    .container {
-      padding: 20px;
-      background-color: #ffffff;
-      margin: 20px;
-      border-radius: 8px;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    .sidebar {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background-color: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
-
-    .container h2 {
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
-
-    .marker-options {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .marker-options label {
-      font-size: 16px;
-    }
-
-    .marker-options select {
-      padding: 5px;
-      font-size: 16px;
-    }
-
-    .note-input {
-      width: 100%;
+    .filter-button {
       padding: 10px;
-      font-size: 16px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    .button {
-      padding: 10px 20px;
-      background-color: #ff66cc;
+      background-color: #ff4b5c;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-
-    .button:hover {
-      background-color: #ff3385;
+    .filter-button:hover {
+      background-color: #e04354;
     }
-
-    .heart-icon {
-      width: 24px;
-      height: 24px;
+    .weather-info {
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2>Mapa Interactivo en Bogotá</h2>
-    <p>Haz clic en el mapa para agregar marcadores con notas y personaliza los colores.</p>
-
-    <!-- Selección de color para el marcador -->
-    <div class="marker-options">
-      <label for="marker-color">Elige el color del marcador:</label>
-      <select id="marker-color">
-        <option value="red">Rojo</option>
-        <option value="blue">Azul</option>
-        <option value="green">Verde</option>
-        <option value="purple">Morado</option>
-      </select>
-    </div>
-
-    <!-- Campos para agregar nota -->
-    <textarea id="note-title" class="note-input" placeholder="Título de la nota..."></textarea>
-    <textarea id="note-content" class="note-input" placeholder="Contenido de la nota..."></textarea>
-
-    <!-- Botón para agregar marcador -->
-    <button id="add-marker-btn" class="button">Agregar Marcador</button>
+<div class="sidebar">
+  <h3>Mapa Interactivo</h3>
+  <button class="filter-button" onclick="filterPlaces()">Filtrar Restaurantes</button>
+  <div class="weather-info">
+    <h4>Clima Actual</h4>
+    <p id="weather">Cargando...</p>
   </div>
+</div>
 
-  <!-- Mapa -->
-  <div id="map"></div>
+<div id="map"></div>
 
-  <script>
-    // Crear el mapa centrado en Bogotá
-    var map = L.map('map').setView([4.7110, -74.0721], 12); // Bogotá, Colombia
+<!-- Incluir los scripts de Leaflet y Leaflet Routing Machine -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    // Cargar la capa base de OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+<script>
+  // Inicializar el mapa
+  var map = L.map('map').setView([40.730610, -73.935242], 13); // Coordenadas de Nueva York como ejemplo
 
-    // Limitar el área de búsqueda solo a Bogotá
-    var bounds = [[4.478, -74.340], [4.866, -73.906]]; // Definir el área de Bogotá
-    map.setMaxBounds(bounds);
+  // Cargar el mapa base (OpenStreetMap)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
 
-    // Función para agregar un marcador con color y nota
-    function addMarker(lat, lng) {
-      // Obtener el color seleccionado
-      var color = document.getElementById("marker-color").value;
-      var noteTitle = document.getElementById("note-title").value;
-      var noteContent = document.getElementById("note-content").value;
+  // Función para agregar marcadores (puntos de interés)
+  var places = [
+    { lat: 40.730610, lon: -73.935242, name: 'Restaurante A', type: 'restaurante' },
+    { lat: 40.741610, lon: -73.935242, name: 'Museo B', type: 'museo' },
+    { lat: 40.720610, lon: -73.925242, name: 'Restaurante C', type: 'restaurante' },
+    { lat: 40.710610, lon: -73.915242, name: 'Parque D', type: 'parque' }
+  ];
 
-      // Verificar si hay título y contenido en las notas
-      if (!noteTitle || !noteContent) {
-        alert("¡Por favor ingresa un título y contenido para la nota!");
-        return;
-      }
-
-      // Crear el marcador con el color seleccionado
-      var markerIcon = L.icon({
-        iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Heart_icon_%28colored%29.svg',  // Ícono de corazón
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-        shadowSize: [0, 0]
-      });
-
-      var marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
-      marker.bindPopup("<b>" + noteTitle + "</b><br>" + noteContent + "<br><button onclick='deleteMarker(" + lat + "," + lng + ")'>Eliminar Marcador</button>");
-      
-      // Limpiar los campos de texto
-      document.getElementById("note-title").value = "";
-      document.getElementById("note-content").value = "";
-    }
-
-    // Función para eliminar un marcador
-    function deleteMarker(lat, lng) {
-      // Filtrar los marcadores guardados para eliminar el que se ha seleccionado
-      var markers = map._layers;
-      for (var id in markers) {
-        if (markers[id]._latlng && markers[id]._latlng.lat === lat && markers[id]._latlng.lng === lng) {
-          map.removeLayer(markers[id]);
-        }
-      }
-    }
-
-    // Manejar clic en el mapa para agregar marcador
-    map.on('click', function(e) {
-      var lat = e.latlng.lat;
-      var lng = e.latlng.lng;
-      addMarker(lat, lng);
+  var markers = [];
+  
+  function addPlaceMarkers(places) {
+    places.forEach(function(place) {
+      var marker = L.marker([place.lat, place.lon]).addTo(map)
+        .bindPopup('<b>' + place.name + '</b><br>Tipo: ' + place.type);
+      markers.push(marker);
     });
+  }
 
-    // Manejar clic en el botón para agregar marcador
-    document.getElementById("add-marker-btn").addEventListener("click", function() {
-      var lat = map.getCenter().lat;
-      var lng = map.getCenter().lng;
-      addMarker(lat, lng);
+  // Filtrar lugares según el tipo (restaurantes)
+  function filterPlaces() {
+    var filteredPlaces = places.filter(function(place) {
+      return place.type === 'restaurante';
     });
+    // Limpiar los marcadores previos
+    markers.forEach(function(marker) {
+      map.removeLayer(marker);
+    });
+    markers = [];
+    // Agregar los marcadores filtrados
+    addPlaceMarkers(filteredPlaces);
+  }
 
-    // Configuración del geocodificador con restricción a Bogotá
-    var geocoder = L.Control.geocoder({
-      geocoder: L.Control.Geocoder.nominatim(),
-      placeholder: 'Buscar en Bogotá...',
-      queryParams: {
-        countrycodes: 'CO', // Limitar la búsqueda a Colombia
-        limit: 5 // Limitar el número de resultados
-      },
-      onResult: function(e) {
-        var lat = e.latlng.lat;
-        var lng = e.latlng.lng;
+  // Función para agregar rutas (navegación entre dos puntos)
+  var control = L.Routing.control({
+    waypoints: [
+      L.latLng(40.730610, -73.935242), // Punto de inicio
+      L.latLng(40.741610, -73.935242)  // Punto de destino
+    ],
+    routeWhileDragging: true
+  }).addTo(map);
 
-        // Verificar si la ubicación está dentro de los límites de Bogotá
-        if (map.getBounds().contains([lat, lng])) {
-          map.setView([lat, lng], 14);  // Centrar el mapa en la ubicación encontrada
-        } else {
-          alert("La ubicación no está dentro de los límites de Bogotá.");
-        }
-      }
-    }).addTo(map);
-  </script>
+  // Obtener y mostrar el clima actual (requiere una API KEY de OpenWeatherMap)
+  function getWeather() {
+    var apiKey = 'tu_api_key';  // Sustituye con tu clave de API de OpenWeatherMap
+    var weatherUrl = 'https://api.openweathermap.org/data/2.5/weather?lat=40.730610&lon=-73.935242&appid=' + apiKey + '&units=metric&lang=es';
+    
+    $.getJSON(weatherUrl, function(data) {
+      var weatherDescription = data.weather[0].description;
+      var temperature = data.main.temp;
+      var weatherText = 'Clima: ' + weatherDescription + '<br>Temperatura: ' + temperature + '°C';
+      $('#weather').html(weatherText);
+    }).fail(function() {
+      $('#weather').html('No se pudo obtener el clima.');
+    });
+  }
+
+  // Cargar el clima al cargar la página
+  getWeather();
+
+  // Agregar todos los lugares al mapa
+  addPlaceMarkers(places);
+</script>
+
 </body>
 </html>
